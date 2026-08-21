@@ -47,6 +47,36 @@ app.command("/cream-tictactoe", async ({ command, ack, respond }) => {
     });
 });
 
+app.action("ttt_play_again", async ({ ack, body, respond }) => {
+    await ack();
+
+    if (body.type !== "block_actions") return;
+    const userId = body.user.id;
+    const board = createGame(userId);
+
+    await respond({
+        replace_original: true,
+        text: "Tic Tac Toe",
+        blocks: [
+            {
+                type: "section",
+                text: {
+                    type: "mrkdwn",
+                    text: `Hey! <@${userId}>! You started a tictactoe game by cream games using /cream-tictactoe! :yeah:`
+                }
+            },
+            {
+                type: "section",
+                text: {
+                    type: "mrkdwn",
+                    text: `*Tic-Tac-Toe*\n\n<@${userId}> :X: vs :neobot: Bot :O:`
+                },
+            },
+            ...createBoardBlocks(board),
+        ],
+    });
+});
+
 app.action(/^ttt_\d_\d$/, async ({ ack, body, respond }) => {
     await ack();
 
@@ -86,6 +116,20 @@ app.action(/^ttt_\d_\d$/, async ({ ack, body, respond }) => {
                         text: `*You won!*\n\n<@${userId}> :X: defeated :neobot: Bot :O:`,
                     },
                 },
+                {
+                    type: "actions",
+                    elements: [
+                        {
+                            type: "button",
+                            text: {
+                                type: "plain_text",
+                                text: "Play Again",
+                            },
+                            action_id: "ttt_play_again",
+                            value: "play_again",
+                        },
+                    ],
+                },
                 ...createBoardBlocks(board),
             ],
         });
@@ -103,6 +147,20 @@ app.action(/^ttt_\d_\d$/, async ({ ack, body, respond }) => {
                         type: "mrkdwn",
                         text: "Well,... its a draw :pf:"
                     },
+                },
+                {
+                    type: "actions",
+                    elements: [
+                        {
+                            type: "button",
+                            text: {
+                                type: "plain_text",
+                                text: "Play Again",
+                            },
+                            action_id: "ttt_play_again",
+                            value: "play_again",
+                        },
+                    ],
                 },
                 ...createBoardBlocks(board),
             ],
@@ -123,8 +181,22 @@ app.action(/^ttt_\d_\d$/, async ({ ack, body, respond }) => {
                     type: "section",
                     text: {
                         type: "mrkdwn",
-                        text: `*Neobot beat you :xdd:!* Better luck next time noob!`,
+                        text: `*Neobot beat you <@${userId}> :xdd:!* Better luck next time noob!`,
                     },
+                },
+                {
+                    type: "actions",
+                    elements: [
+                        {
+                            type: "button",
+                            text: {
+                                type: "plain_text",
+                                text: "Play Again",
+                            },
+                            action_id: "ttt_play_again",
+                            value: "play_again",
+                        },
+                    ],
                 },
                 ...createBoardBlocks(board),
             ],
@@ -145,6 +217,20 @@ app.action(/^ttt_\d_\d$/, async ({ ack, body, respond }) => {
                         type: "mrkdwn",
                         text: `*Uhhg it's a draw. :noooo: *`,
                     },
+                },
+                {
+                    type: "actions",
+                    elements: [
+                        {
+                            type: "button",
+                            text: {
+                                type: "plain_text",
+                                text: "Play Again",
+                            },
+                            action_id: "ttt_play_again",
+                            value: "play_again",
+                        },
+                    ],
                 },
                 ...createBoardBlocks(board),
             ],
