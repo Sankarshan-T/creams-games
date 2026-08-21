@@ -13,3 +13,82 @@ export function createBoard(): Board {
         [null, null, null]
     ];
 }
+
+export function makeMove(
+    board: Board,
+    row: number,
+    col: number,
+    player: "X" | "O"
+): boolean {
+    if (board[row][col] !== null) {
+        return false;
+    }
+
+    board[row][col] = player;
+
+    return true;
+}
+
+export function makeBotMove(board: Board): boolean {
+    const emptyCells: [number, number][] = [];
+
+    for (let row = 0; row < 3; row++) {
+        for (let col = 0; col < 3; col++) {
+            if (board[row][col] === null) {
+                emptyCells.push([row, col]);
+            }
+        }
+    }
+
+    if (emptyCells.length === 0) return false;
+
+    const randomIndex = Math.floor(Math.random() * emptyCells.length);
+    const [row, col] = emptyCells[randomIndex];
+
+    board[row][col] = "O";
+
+    return true;
+}
+
+export function checkWinner(board: Board): Cell {
+    for (let row = 0; row < 3; row++) {
+        if (
+            board[row][0] !== null &&
+            board[row][0] === board[row][1] &&
+            board[row][1] === board[row][2]
+        ) return board[row][0];
+    }
+
+    for (let col = 0; col < 3; col++) {
+        if (
+            board[0][col] !== null &&
+            board[0][col] === board[1][col] &&
+            board[1][col] === board[2][col]
+        ) return board[0][col];
+    }
+
+    if (
+        board[0][0] !== null &&
+        board[0][0] === board[1][1] &&
+        board[1][1] === board[2][2]
+    ) return board[0][0];
+
+    if (
+        board[0][2] !== null &&
+        board[0][2] === board[1][1] &&
+        board[1][1] === board[2][0]
+    ) return board[0][2];
+
+    return null;
+}
+
+export function isBoardFull(board: Board): boolean {
+    for (const row of board) {
+        for (const cell of row) {
+            if (cell === null) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
