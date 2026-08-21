@@ -75,7 +75,6 @@ app.action(/^ttt_\d_\d$/, async ({ ack, body, respond }) => {
     let winner = checkWinner(board);
 
     if (winner === "X") {
-        deleteGame(userId);
         await respond({
             replace_original: true,
             text: "Tic Tac Toe",
@@ -89,7 +88,8 @@ app.action(/^ttt_\d_\d$/, async ({ ack, body, respond }) => {
                 },
                 ...createBoardBlocks(board),
             ],
-        })
+        });
+        deleteGame(userId);
     }
 
     if (isBoardFull(board)) {
@@ -107,14 +107,14 @@ app.action(/^ttt_\d_\d$/, async ({ ack, body, respond }) => {
                 ...createBoardBlocks(board),
             ],
         });
+        deleteGame(userId);
     }
 
-    makeBotMove(board);
+    if (getGame(userId)) makeBotMove(board); else return;
 
     winner = checkWinner(board);
 
     if (winner === "O") {
-        deleteGame(userId);
         await respond({
             replace_original: true,
             text: "Tic Tac Toe",
@@ -129,12 +129,12 @@ app.action(/^ttt_\d_\d$/, async ({ ack, body, respond }) => {
                 ...createBoardBlocks(board),
             ],
         });
+        deleteGame(userId);
 
         return;
     }
 
     if (isBoardFull(board)) {
-        deleteGame(userId);
         await respond({
             replace_original: true,
             text: "Tic Tac Toe",
@@ -149,25 +149,27 @@ app.action(/^ttt_\d_\d$/, async ({ ack, body, respond }) => {
                 ...createBoardBlocks(board),
             ],
         });
+        deleteGame(userId);
 
         return;
     }
 
-
-    await respond({
-        replace_original: true,
-        text: "Tic Tac Toe",
-        blocks: [
-            {
-                type: "section",
-                text: {
-                    type: "mrkdwn",
-                    text: `*Tic-Tac-Toe*\n\n<@${userId}> :X: vs :neobot: Bot :O:`
+    if (getGame(userId)) {
+        await respond({
+            replace_original: true,
+            text: "Tic Tac Toe",
+            blocks: [
+                {
+                    type: "section",
+                    text: {
+                        type: "mrkdwn",
+                        text: `*Tic-Tac-Toe*\n\n<@${userId}> :X: vs :neobot: Bot :O:`
+                    },
                 },
-            },
-            ...createBoardBlocks(board),
-        ],
-    });
+                ...createBoardBlocks(board),
+            ],
+        });
+    } else return;
 });
 
 (async () => {
