@@ -7,9 +7,12 @@ import {
     makeBestBotMove,
     checkWinner,
     isBoardFull,
+    createGameState,
+    makeBotMove,
+    makeBetterBotMove,
 } from "./games/tictactoe/game.js";
 
-import type { Board } from "./games/tictactoe/game.js";
+import type { Board, Difficulty, TicTacToeState } from "./games/tictactoe/game.js";
 
 import { createBoardBlocks } from "./games/tictactoe/ui.js";
 
@@ -29,40 +32,118 @@ const app = new App({
 
 // tictactoe
 
-app.command("/cream-tictactoe", async ({ command, ack, respond }) => {
+// added a difficulty block (reusable) as i want to use this in play again and in multiple places.
+// and btw dont judge me by the emojis please i added them to make the buttons have a feel
+function difficultySelectorBlocks() {
+    return [
+        {
+            type: "section" as const,
+            text: {
+                type: "mrkdwn" as const,
+                text:
+                    "Tic Tac Toe\n\n" +
+                    "Choose your difficulty:\n\n"
+            },
+        },
+        {
+            type: "actions" as const,
+            elements: [
+                {
+                    type: "button" as const,
+                    text: {
+                        type: "plain_text" as const,
+                        text: "🟢 Easy",
+                    },
+                    action_id: "ttt_difficulty_easy",
+                },
+                {
+                    type: "button" as const,
+                    text: {
+                        type: "plain_text" as const,
+                        text: "🟡 Medium",
+                    },
+                    action_id: "ttt_difficulty_medium",
+                },
+                {
+                    type: "button" as const,
+                    text: {
+                        type: "plain_text" as const,
+                        text: "🔴 Hard",
+                    },
+                    action_id: "ttt_difficulty_impossible",
+                },
+            ],
+        },
+    ];
+}
+
+app.command("/cream-tictactoe", async ({ command, ack, client }) => {
     await ack();
 
-    const board = createBoard();
-
-    createGame(
-        command.user_id,
-        "tictactoe",
-        board,
-    );
-
-    await respond({
-        response_type: "in_channel",
-        text: `Tic-Tac-Toe started by <@${command.user_id}>`,
-        blocks: [
-            {
-                type: "section",
-                text: {
-                    type: "mrkdwn",
-                    text: `Hey! <@${command.user_id}>! You started a Tic-Tac-Toe game from Cream Games! :yeah:`,
-                },
-            },
-            {
-                type: "section",
-                text: {
-                    type: "mrkdwn",
-                    text: `<@${command.user_id}> :X: vs :neobot: Bot :O:`,
-                },
-            },
-            ...createBoardBlocks(board),
-        ],
+    await client.chat.postMessage({
+        channel: command.channel_id,
+        text: "Tic-Tac-Toe: Choose a difficulty",
+        blocks: difficultySelectorBlocks(),
     });
 });
 
+// manages the action buttons for difficuty
+app.action(
+    /^ttt_difficulty_(easy|medium|impossible)$/,
+    async ({ ack, body, client, respond }) => {
+        await ack();
+
+        if (body.type !== "block_actions") {
+            return;
+        }
+
+        const action = body.actions[0];
+
+        if (!("action_id" in action)) {
+            return;
+        }
+
+        const difficulty = action.action_id.replace(
+            "ttt_difficulty_",
+            "",
+        ) as Difficulty;
+
+        const userId = body.user.id;
+
+        const state = createGameState(difficulty);
+
+        createGame(
+            userId,
+            "tictactoe",
+            state,
+        );
+
+        if (!body.channel) return;
+
+        await client.chat.postMessage({
+            channel: body.channel.id,
+            text: "Tic Tac Toe",
+            blocks: [
+                {
+                    type: "section",
+                    text: {
+                        type: "mrkdwn",
+                        text: `*Tic-Tac-Toe*\n\n<@${userId}> :X: vs :neobot: Bot :O:\n\nDifficulty: *${difficulty}*`,
+                    },
+                },
+
+                ...createBoardBlocks(state.board),
+            ],
+        });
+
+        if (body.message?.ts && body.channel?.id) {
+            await client.chat.delete({
+                channel: body.channel.id,
+                ts: body.message.ts,
+            });
+        }
+    },
+);
 
 // tictactoe command action
 
@@ -95,7 +176,10 @@ app.action(/^ttt_\d_\d$/, async ({ ack, body, respond }) => {
         return;
     }
 
-    const board = game.state as Board;
+    const state = game.state as TicTacToeState;
+
+    const board = state.board;
+    const difficulty = state.difficulty;
 
 
     // handles player move
@@ -127,7 +211,7 @@ app.action(/^ttt_\d_\d$/, async ({ ack, body, respond }) => {
                     type: "section",
                     text: {
                         type: "mrkdwn",
-                        text: `*You won!*\n\n<@${userId}> :X: defeated :neobot: Bot :O:`,
+                        text: `*You won!*\n\n<@${userId}> :X: defeated :neobot: Bot :O:\n\n Difficulty: *${difficulty}*`,
                     },
                 },
 
@@ -167,7 +251,7 @@ app.action(/^ttt_\d_\d$/, async ({ ack, body, respond }) => {
                     type: "section",
                     text: {
                         type: "mrkdwn",
-                        text: `Uhhgg *It's a draw!* :noooo: `,
+                        text: `Uhhgg *It's a draw!* :noooo: \n\n Difficulty: *${difficulty}* `,
                     },
                 },
 
@@ -195,7 +279,10 @@ app.action(/^ttt_\d_\d$/, async ({ ack, body, respond }) => {
 
 
     // the op bot move
-    makeBestBotMove(board);
+    if (difficulty === "easy") makeBotMove(board);
+    else if (difficulty === "medium") makeBetterBotMove(board);
+    else makeBestBotMove(board);
+
 
 
     //   did the bot win lol?
@@ -212,7 +299,7 @@ app.action(/^ttt_\d_\d$/, async ({ ack, body, respond }) => {
                     type: "section",
                     text: {
                         type: "mrkdwn",
-                        text: `*Neobot won with you :bleh: :xdd: !*\n\nBetter luck next time, <@${userId}> noob!`,
+                        text: `*Neobot won with you :bleh: :xdd: !*\n\nBetter luck next time, <@${userId}> noob!\n\n Difficulty: *${difficulty}*`,
                     },
                 },
 
@@ -251,7 +338,7 @@ app.action(/^ttt_\d_\d$/, async ({ ack, body, respond }) => {
                     type: "section",
                     text: {
                         type: "mrkdwn",
-                        text: `Uhhgg *It's a draw!* :noooo: `,
+                        text: `Uhhgg *It's a draw!* :noooo: \n\n Difficulty: *${difficulty}*`,
                     },
                 },
 
@@ -286,7 +373,7 @@ app.action(/^ttt_\d_\d$/, async ({ ack, body, respond }) => {
                 type: "section",
                 text: {
                     type: "mrkdwn",
-                    text: `*Tic-Tac-Toe*\n\n<@${userId}> :X: vs :neobot: Bot :O:`,
+                    text: `*Tic-Tac-Toe*\n\n<@${userId}> :X: vs :neobot: Bot :O: \n\n Difficulty: *${difficulty}*`,
                 },
             },
 
@@ -295,7 +382,7 @@ app.action(/^ttt_\d_\d$/, async ({ ack, body, respond }) => {
     });
 });
 
-// play again button and stuff
+// play again button functions and stuff
 app.action("ttt_play_again", async ({ ack, body, respond }) => {
     await ack();
 
@@ -303,30 +390,10 @@ app.action("ttt_play_again", async ({ ack, body, respond }) => {
         return;
     }
 
-    const userId = body.user.id;
-
-    const board = createBoard();
-
-    createGame(
-        userId,
-        "tictactoe",
-        board,
-    );
-
     await respond({
         replace_original: true,
-        text: "Tic Tac Toe",
-        blocks: [
-            {
-                type: "section",
-                text: {
-                    type: "mrkdwn",
-                    text: `*New Game!*\n\n<@${userId}> :X: vs :neobot: Bot :O:`,
-                },
-            },
-
-            ...createBoardBlocks(board),
-        ],
+        text: "Choose a Tic-Tac-Toe difficulty",
+        blocks: difficultySelectorBlocks(),
     });
 });
 

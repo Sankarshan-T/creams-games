@@ -1,10 +1,20 @@
 export type Cell = "X" | "O" | null;
 
+export type Difficulty =
+    | "easy"
+    | "medium"
+    | "impossible";
+
 export type Board = [
     [Cell, Cell, Cell],
     [Cell, Cell, Cell],
     [Cell, Cell, Cell]
 ];
+
+export interface TicTacToeState {
+    board: Board;
+    difficulty: Difficulty;
+}
 
 export function createBoard(): Board {
     return [
@@ -12,6 +22,13 @@ export function createBoard(): Board {
         [null, null, null],
         [null, null, null]
     ];
+}
+
+export function createGameState(difficulty: Difficulty): TicTacToeState {
+    return {
+        board: createBoard(),
+        difficulty,
+    }
 }
 
 export function makeMove(
@@ -30,6 +47,27 @@ export function makeMove(
 }
 
 export function makeBotMove(board: Board): boolean {
+    const emptyCells: [number, number][] = [];
+
+    for (let row = 0; row < 3; row++) {
+        for (let col = 0; col < 3; col++) {
+            if (board[row][col] === null) {
+                emptyCells.push([row, col]);
+            }
+        }
+    }
+
+    if (emptyCells.length === 0) return false;
+
+    const randomIndex = Math.floor(Math.random() * emptyCells.length);
+    const [row, col] = emptyCells[randomIndex];
+
+    board[row][col] = "O";
+
+    return true;
+}
+
+export function makeBetterBotMove(board: Board): boolean {
     const winningMove = findWinningMove(board, "O");
 
     if (winningMove) {
@@ -56,9 +94,8 @@ export function makeBotMove(board: Board): boolean {
         }
     }
 
-    if (emptyCells.length === 0) {
-        return false;
-    }
+    if (emptyCells.length === 0) return false;
+
 
     const randomIndex = Math.floor(Math.random() * emptyCells.length);
     const [row, col] = emptyCells[randomIndex];
