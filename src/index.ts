@@ -3,6 +3,7 @@ import "dotenv/config";
 
 import { registerGamesCommand } from "./commands/games.js";
 import { registerTicTacToe } from "./games/tictactoe/commands.js";
+import { registerRPS } from "./games/rps/commands.js";
 
 const app = new App({
     token: process.env.SLACK_BOT_TOKEN,
@@ -12,6 +13,7 @@ const app = new App({
 
 registerGamesCommand(app);
 registerTicTacToe(app);
+registerRPS(app);
 
 (async () => {
     await app.start();

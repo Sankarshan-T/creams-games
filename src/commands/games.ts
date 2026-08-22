@@ -2,6 +2,7 @@ import type { App } from "@slack/bolt";
 import {
     getTicTacToeDifficultyBlocks,
 } from "../games/tictactoe/commands.js";
+import { createRPSBlocks } from "../games/rps/ui.js";
 
 export function registerGamesCommand(app: App) {
     app.command("/cream-games", async ({ command, ack, respond }) => {
@@ -28,6 +29,16 @@ export function registerGamesCommand(app: App) {
                 response_type: "ephemeral",
                 text: "Choose your Tic-Tac-Toe difficulty:",
                 blocks: getTicTacToeDifficultyBlocks(),
+            });
+
+            return;
+        }
+
+        if (game === "rps") {
+            await respond({
+                response_type: "in_channel",
+                text: "Rock Paper Scissors",
+                blocks: createRPSBlocks(),
             });
 
             return;
