@@ -1,20 +1,23 @@
-import type { Board } from "./tictactoe/game.js";
+import type { ActiveGame, GameType } from "./types.js";
 
-const games = new Map<string, Board>();
+const games = new Map<string, ActiveGame>();
 
-export function createGame(userId: string): Board {
-    const board: Board = [
-        [null, null, null],
-        [null, null, null],
-        [null, null, null],
-    ];
+export function createGame(
+    userId: string,
+    type: GameType,
+    state: unknown,
+): ActiveGame {
+    const game: ActiveGame = {
+        type,
+        userId,
+        state,
+    };
+    games.set(userId, game);
 
-    games.set(userId, board);
-
-    return board;
+    return game;
 }
 
-export function getGame(userId: string): Board | undefined {
+export function getGame(userId: string): ActiveGame | undefined {
     return games.get(userId);
 }
 
