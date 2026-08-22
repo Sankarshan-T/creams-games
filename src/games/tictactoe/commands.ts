@@ -20,6 +20,49 @@ import {
     deleteGame,
 } from "../game-manager.js";
 
+
+export function getTicTacToeDifficultyBlocks() {
+    return [
+        {
+            type: "section" as const,
+            text: {
+                type: "mrkdwn" as const,
+                text:
+                    "Tic Tac Toe\n\n" +
+                    "Choose your difficulty:\n\n",
+            },
+        },
+        {
+            type: "actions" as const,
+            elements: [
+                {
+                    type: "button" as const,
+                    text: {
+                        type: "plain_text" as const,
+                        text: "🟢 Easy",
+                    },
+                    action_id: "ttt_difficulty_easy",
+                },
+                {
+                    type: "button" as const,
+                    text: {
+                        type: "plain_text" as const,
+                        text: "🟡 Medium",
+                    },
+                    action_id: "ttt_difficulty_medium",
+                },
+                {
+                    type: "button" as const,
+                    text: {
+                        type: "plain_text" as const,
+                        text: "🔴 Hard",
+                    },
+                    action_id: "ttt_difficulty_impossible",
+                },
+            ],
+        },
+    ];
+}
 export function registerTicTacToe(app: App) {
     // difficulty
     function difficultySelectorBlocks() {
@@ -64,16 +107,6 @@ export function registerTicTacToe(app: App) {
             },
         ];
     }
-
-    app.command("/cream-tictactoe", async ({ command, ack, client }) => {
-        await ack();
-
-        await client.chat.postMessage({
-            channel: command.channel_id,
-            text: "Tic-Tac-Toe: Choose a difficulty",
-            blocks: difficultySelectorBlocks(),
-        });
-    });
 
     // manages the action buttons for difficuty
     app.action(
@@ -381,7 +414,7 @@ export function registerTicTacToe(app: App) {
         await respond({
             replace_original: true,
             text: "Choose a Tic-Tac-Toe difficulty",
-            blocks: difficultySelectorBlocks(),
+            blocks: getTicTacToeDifficultyBlocks(),
         });
     });
 

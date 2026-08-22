@@ -1,6 +1,7 @@
 import { App } from "@slack/bolt";
 import "dotenv/config";
 
+import { registerGamesCommand } from "./commands/games.js";
 import { registerTicTacToe } from "./games/tictactoe/commands.js";
 
 const app = new App({
@@ -9,6 +10,7 @@ const app = new App({
     socketMode: true,
 });
 
+registerGamesCommand(app);
 registerTicTacToe(app);
 
 (async () => {
