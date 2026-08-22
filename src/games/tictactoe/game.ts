@@ -123,3 +123,73 @@ export function findWinningMove(board: Board, player: "X" | "O"): [number, numbe
     }
     return null;
 }
+
+function minmax(board: Board, maximizing: boolean): number {
+    const winner = checkWinner(board);
+    if (winner === "O") return 10;
+    if (winner === "X") return -10;
+    if (isBoardFull(board)) return 0;
+
+    if (maximizing) {
+        let bestScore = -Infinity;
+        for (let row = 0; row < 3; row++) {
+            for (let col = 0; col < 3; col++) {
+                if (board[row][col] !== null) continue;
+
+                board[row][col] = "O";
+                const score = minmax(board, false);
+                board[row][col] = null;
+                bestScore = Math.max(bestScore, score);
+            }
+        }
+        return bestScore;
+    }
+
+    let bestScore = Infinity;
+
+    for (let row = 0; row < 3; row++) {
+        for (let col = 0; col < 3; col++) {
+            if (board[row][col] !== null) {
+                continue;
+            }
+
+            board[row][col] = "X";
+
+            const score = minmax(board, true);
+
+            board[row][col] = null;
+
+            bestScore = Math.min(bestScore, score);
+        }
+    }
+
+    return bestScore;
+}
+
+export function makeBestBotMove(board: Board) {
+    let bestScore = -Infinity;
+    let bestMove: [number, number] | null = null;
+
+    for (let row = 0; row < 3; row++) {
+        for (let col = 0; col < 3; col++) {
+            if (board[row][col] !== null) continue;
+
+
+            board[row][col] = "O";
+
+            const score = minmax(board, false);
+
+            board[row][col] = null;
+
+            if (score > bestScore) {
+                bestScore = score;
+                bestMove = [row, col];
+            }
+        }
+    }
+
+    if (!bestMove) return false;
+    const [row, col] = bestMove;
+    board[row][col] = "O";
+    return true;
+}

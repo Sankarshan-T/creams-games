@@ -10,6 +10,7 @@ import {
 import {
     makeMove,
     makeBotMove,
+    makeBestBotMove,
     checkWinner,
     isBoardFull,
 } from "./games/tictactoe/game.js";
@@ -168,7 +169,7 @@ app.action(/^ttt_\d_\d$/, async ({ ack, body, respond }) => {
         deleteGame(userId);
     }
 
-    if (getGame(userId)) makeBotMove(board); else return;
+    if (getGame(userId)) makeBestBotMove(board); else return;
 
     winner = checkWinner(board);
 
