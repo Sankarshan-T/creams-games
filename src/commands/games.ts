@@ -3,6 +3,7 @@ import {
     getTicTacToeDifficultyBlocks,
 } from "../games/tictactoe/commands.js";
 import { createRPSBlocks } from "../games/rps/ui.js";
+import { startRPS } from "../games/rps/commands.js";
 
 export function registerGamesCommand(app: App) {
     app.command("/cream-games", async ({ command, ack, respond }) => {
@@ -35,6 +36,8 @@ export function registerGamesCommand(app: App) {
         }
 
         if (game === "rps") {
+            startRPS(command.user_id);
+
             await respond({
                 response_type: "in_channel",
                 text: "Rock Paper Scissors",

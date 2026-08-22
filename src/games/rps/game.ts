@@ -1,5 +1,28 @@
 export type RPSChoice = "rock" | "paper" | "scissors";
 export type RPSResult = "win" | "lose" | "draw";
+export type RPSScore = {
+    player: number;
+    bot: number;
+};
+
+export function createScore(): RPSScore {
+    return {
+        player: 0,
+        bot: 0,
+    };
+}
+
+export function updateScore(
+    score: RPSScore,
+    result: RPSResult,
+): void {
+    if (result === "win") score.player++;
+    else if (result === "lose") score.bot++;
+}
+
+export function isMatchOver(score: RPSScore): boolean {
+    return score.player >= 3 || score.bot >= 3;
+}
 
 export function getBotChoice(): RPSChoice {
     const choices: RPSChoice[] = [
