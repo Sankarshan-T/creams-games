@@ -30,6 +30,22 @@ export function makeMove(
 }
 
 export function makeBotMove(board: Board): boolean {
+    const winningMove = findWinningMove(board, "O");
+
+    if (winningMove) {
+        const [row, col] = winningMove;
+        board[row][col] = "O";
+        return true;
+    }
+
+    const blockingMove = findWinningMove(board, "X");
+
+    if (blockingMove) {
+        const [row, col] = blockingMove;
+        board[row][col] = "O";
+        return true;
+    }
+
     const emptyCells: [number, number][] = [];
 
     for (let row = 0; row < 3; row++) {
@@ -40,7 +56,9 @@ export function makeBotMove(board: Board): boolean {
         }
     }
 
-    if (emptyCells.length === 0) return false;
+    if (emptyCells.length === 0) {
+        return false;
+    }
 
     const randomIndex = Math.floor(Math.random() * emptyCells.length);
     const [row, col] = emptyCells[randomIndex];
@@ -91,4 +109,17 @@ export function isBoardFull(board: Board): boolean {
         }
     }
     return true;
+}
+
+export function findWinningMove(board: Board, player: "X" | "O"): [number, number] | null {
+    for (let row = 0; row < 3; row++) {
+        for (let col = 0; col < 3; col++) {
+            if (board[row][col] !== null) continue;
+            board[row][col] = player;
+            const winner = checkWinner(board);
+            board[row][col] = null;
+            if (winner === player) return [row, col];
+        }
+    }
+    return null;
 }
